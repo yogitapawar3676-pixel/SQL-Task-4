@@ -1,0 +1,123 @@
+CREATE DATABASE hotel_db;
+USE hotel_db;
+
+CREATE TABLE Hotel (
+    hotel_id INT PRIMARY KEY AUTO_INCREMENT,
+    hotel_name VARCHAR(100) NOT NULL,
+    location VARCHAR(100)
+);
+
+CREATE TABLE Room (
+    room_id INT PRIMARY KEY AUTO_INCREMENT,
+    hotel_id INT,
+    room_type VARCHAR(50),
+    price_per_night DECIMAL(10,2),
+    FOREIGN KEY (hotel_id) REFERENCES Hotel(hotel_id)
+);
+
+CREATE TABLE Guest (
+    guest_id INT PRIMARY KEY AUTO_INCREMENT,
+    guest_name VARCHAR(100),
+    email VARCHAR(100)
+);
+
+CREATE TABLE Booking (
+    booking_id INT PRIMARY KEY AUTO_INCREMENT,
+    hotel_id INT,
+    guest_id INT,
+    check_in DATE,
+    check_out DATE,
+    FOREIGN KEY (hotel_id) REFERENCES Hotel(hotel_id),
+    FOREIGN KEY (guest_id) REFERENCES Guest(guest_id)
+);
+
+CREATE TABLE Payment (
+    payment_id INT PRIMARY KEY AUTO_INCREMENT,
+    booking_id INT,
+    amount DECIMAL(10,2),
+    payment_date DATE,
+    department VARCHAR(50),
+    FOREIGN KEY (booking_id) REFERENCES Booking(booking_id)
+);
+
+INSERT INTO Hotel (hotel_name, location) VALUES
+('Grand Palace', 'New York'),
+('Ocean View', 'Miami'),
+('Mountain Retreat', 'Denver');
+
+INSERT INTO Room (hotel_id, room_type, price_per_night) VALUES
+(1, 'Single', 120.00),
+(1, 'Double', 200.00),
+(2, 'Suite', 350.00),
+(2, 'Single', 150.00),
+(3, 'Double', 180.00),
+(3, 'Suite', 400.00);
+
+INSERT INTO Guest (guest_name, email) VALUES
+('Alice Johnson', 'alice@example.com'),
+('Bob Smith', 'bob@example.com'),
+('Charlie Brown', 'charlie@example.com');
+
+INSERT INTO Booking (hotel_id, guest_id, check_in, check_out) VALUES
+(1, 1, '2025-08-01', '2025-08-05'),
+(1, 2, '2025-08-03', '2025-08-06'),
+(2, 3, '2025-08-02', '2025-08-07'),
+(3, 1, '2025-08-04', '2025-08-08');
+
+INSERT INTO Payment (booking_id, amount, payment_date, department) VALUES
+(1, 480.00, '2025-08-01', 'Front Desk'),
+(2, 400.00, '2025-08-03', 'Front Desk'),
+(3, 1750.00, '2025-08-02', 'Online'),
+(4, 720.00, '2025-08-04', 'Front Desk');
+
+SELECT h.hotel_name, COUNT(b.booking_id) AS total_bookings
+FROM Hotel h
+JOIN Booking b ON h.hotel_id = b.hotel_id
+GROUP BY h.hotel_name
+ORDER BY total_bookings DESC;
+
+SELECT h.hotel_name, ROUND(AVG(r.price_per_night), 2) AS avg_price
+FROM Hotel h
+JOIN Room r ON h.hotel_id = r.hotel_id
+GROUP BY h.hotel_name
+ORDER BY avg_price DESC;
+
+SELECT h.hotel_name, SUM(p.amount) AS total_revenue
+FROM Hotel h
+JOIN Booking b ON h.hotel_id = b.hotel_id
+JOIN Payment p ON b.booking_id = p.booking_id
+GROUP BY h.hotel_name
+ORDER BY total_revenue DESC;
+
+SELECT h.hotel_name, SUM(p.amount) AS total_revenue
+FROM Hotel h
+JOIN Booking b ON h.hotel_id = b.hotel_id
+JOIN Payment p ON b.booking_id = p.booking_id
+GROUP BY h.hotel_name
+HAVING SUM(p.amount) > 50000
+ORDER BY total_revenue DESC;
+
+SELECT room_type, MAX(price_per_night) AS highest_price
+FROM Room
+GROUP BY room_type
+ORDER BY highest_price DESC;
+
+SELECT h.hotel_name, COUNT(DISTINCT g.guest_id) AS unique_guests
+FROM Hotel h
+JOIN Booking b ON h.hotel_id = b.hotel_id
+JOIN Guest g ON b.guest_id = g.guest_id
+GROUP BY h.hotel_name
+ORDER BY unique_guests DESC;
+
+SELECT h.hotel_name, ROUND(AVG(DATEDIFF(b.check_out, b.check_in)), 1) AS avg_stay_days
+FROM Hotel h
+JOIN Booking b ON h.hotel_id = b.hotel_id
+GROUP BY h.hotel_name
+ORDER BY avg_stay_days DESC;
+
+SELECT department, SUM(amount) 
+AS department_revenue
+FROM Payment
+GROUP BY department
+ORDER BY SUM(amount) DESC
+LIMIT 1;
